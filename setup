@@ -1,0 +1,15 @@
+#!/bin/bash
+
+## set up osx dependencies
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+## remove old versions of ffmpeg if necessary and then install all script dependencies
+brew uninstall --force --ignore-dependencies ffmpeg
+brew install chromaprint amiaopensource/amiaos/decklinksdk coreutils cask node trash bc
+
+## tap and install ffmpeg with all dependencies
+brew tap homebrew-ffmpeg/ffmpeg
+brew install ffmpeg
+
+## install the progress bar
+sudo npm install -g ffmpeg-progressbar-cli
