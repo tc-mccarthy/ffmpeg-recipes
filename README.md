@@ -8,7 +8,7 @@ All of the recipes in this repository can be tweaked at will. To ensure you have
 
 ## Plex Optimize
 
-I have used Plex for a long time and spent a lot of time tweaking my various videos to play nicely in PMS, which I have running an a 2015 MacBook Pro. I wanted to reduce the realtime transcode overhead but also minimize the amount of storage each file requires. Since my Plex content had a lot of different source types (I've been producing video since 2004, so I had SD, HD, AVI, h264, DV, MOV, etc) I wanted to be able to standardize them, eliminate the originals (I made copies onto dedicated USB 3.0 hard drives to feed Plex) but also preserve some variances in things like audio.
+I have used Plex for a long time and spent a lot of time tweaking my various videos to play nicely in PMS, which I have running on a 2015 MacBook Pro. I wanted to reduce the realtime transcode overhead but also minimize the amount of storage each file requires. Since my Plex content had a lot of different source types (I've been producing video since 2004, so I had SD, HD, AVI, h264, DV, MOV, etc) I wanted to be able to standardize them, eliminate the originals (I made copies onto dedicated USB 3.0 hard drives to feed Plex) but also preserve some variances in things like audio.
 
 My `plex-optimize` script is tuned for my setup, but it should be easy to adapt it for other purposes. Simply update the PATHS variable (it expects a BASH array) with all of the different directories that contain your movie files. It generates a list of files to be converted and then loops through. It runs ffprobe on each so that I can see if any bitrate adjustments need to be made. I also have logic for upscaling to 1080p for 16:9 and 4:3 aspect ratios.
 
