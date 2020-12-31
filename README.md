@@ -14,6 +14,10 @@ My `plex-optimize` script is tuned for my setup, but it should be easy to adapt 
 
 If my source material is DTS audio, I map it twice. The primary mapping gets downmixed to stereo and the secondary is the original audio line but at a max bitrate. This is because I find that when Plex serves DTS to my TV with onboard stereo speakers, I am constantly increasing the volume to hear speech and then pulling it down when there's music. I preserve the DTS though because I use that audio line when I'm watching a movie with my surround sound on.
 
+#### Helpful hints
+- The list building processes uses `find` and searches for a number of common video extensions. You can extend this by adding your own. 
+- `*.mp4` is excluded from the list of video files I search for because, in my application, that is the extension of the file I'm converting to. If I have an mp4 source file that needs to be standardized, I change the extension to `m4v` which preserves everything in the source file, including playback, but allows the transcode script to pick it up and work with it.
+
 ## Zoom Up-convert
 
 In these times of COVID-19, a lot of things are happening via ZOOM, including video production. Zoom local and cloud records do a nice job, but are seldom available in 1080p. The `zoom-upconvert` script uses ffmpeg to up-convert the results to 1080p, and it does a pretty decent job! The script is configured to be placed in the root of wherever your zoom record files are stored by default (thinking about both my workflow as well as the default Zoom Recordings directory structure). You can modify this if you like. It will identify all of the video files recursively within the specified path(s). Each video file identified will have a converted version created in a sibling directory named `processed` (which means that if you have your records organized into subdirectories, each subdirectory will get it's own `processed` directory).
