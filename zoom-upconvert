@@ -35,6 +35,8 @@ do
   extension="${filename##*.}"
   filename="${filename%.*}"
   NEW_FILE="${PROCESS_FILE_DIR}/${filename}.mp4"
+
+  ## if the process is killed prematurely, delete the destination file in progress so that it is started over on next invocation
   trap "rm \"${NEW_FILE}\"; exit" SIGINT
 
   ## TRANSCODE IF FILE DOESN'T ALREADY EXIST
@@ -49,10 +51,10 @@ do
 
 
     min_video_bitrate=$((5 * 1024))
-    target_fps="2997/100"
-    target_fps_num=$(echo "scale=2; ${target_fps}" | bc)
+    target_fps="2997/100" ## Shooting for NTSC drop frame, which ffprobe displays this way
+    target_fps_num=$(echo "scale=2; ${target_fps}" | bc) ## compute the string representation of the target_fps into a FLOAT for use in transcode
     video_encode_codec="h264_videotoolbox" ## use h264_videotoolbox as the video codec to leverage the GPU. libx264 will use the CPU and will provide smaller files, but also longer encode times
-    video_filters=()
+    video_filters=() ## starts out as an empty array and may never be populated if the source material doesn't require it
 
     stereo_audio_bitrate=441
     min_height=1080

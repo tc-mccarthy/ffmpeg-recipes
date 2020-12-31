@@ -30,6 +30,8 @@ do
   extension="${filename##*.}"
   filename="${filename%.*}"
   NEW_FILE="${FILE_DIR}/${filename}.mp4"
+
+  ## if the process is killed prematurely, delete the destination file in progress so that it is started over on next invocation
   trap "rm \"${NEW_FILE}\"; exit" SIGINT
 
   ## TRANSCODE IF FILE DOESN'T ALREADY EXIST
