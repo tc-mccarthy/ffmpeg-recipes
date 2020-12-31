@@ -1,0 +1,184 @@
+#!/bin/bash
+
+HOSTNAME=$(hostname)
+WORK_DIR="./convert_work"
+FILELIST="${WORK_DIR}/list_${HOSTNAME}.txt"
+CURRENT_CONVERSION="${WORK_DIR}/current_conversion_${HOSTNAME}.txt"
+PATHS=() #BASH ARRAY OF PATHS TO RECURSIVELY CHECK FOR VIDEO FILES
+
+echo "Creating work directory..."
+mkdir -p $WORK_DIR
+
+echo "Creating and clearing file list..."
+touch $FILELIST
+truncate -s 0 $FILELIST
+
+echo "Building file list..."
+for i in "${PATHS[@]}"
+do
+  find "$i" \( -iname "*.avi" -o -iname "*.mkv" -o -iname "*.m4v" -o -iname "*.flv" -o -iname "*.mov" -o -iname "*.wmv" -o -iname "*.webm" -o -iname "*.gif" \) -exec greadlink -f {} >> $FILELIST \;
+done
+
+echo "Transcoding..."
+while IFS= read -r line
+do
+  ## GET THE ORIGINAL DIRECTORY PATH
+  FILE_DIR=$(dirname "${line}")
+
+  ## USE SUBSTITUTION TO BUILD THE DESTINATION FILE NAME
+  filename=$(basename -- "$line")
+  extension="${filename##*.}"
+  filename="${filename%.*}"
+  NEW_FILE="${FILE_DIR}/${filename}.mp4"
+  trap "rm \"${NEW_FILE}\"; exit" SIGINT
+
+  ## TRANSCODE IF FILE DOESN'T ALREADY EXIST
+  if [ ! -f "$NEW_FILE" ]; then
+    echo "transcoding ${line}"
+    echo "${line} -> ${NEW_FILE}" > $CURRENT_CONVERSION
+
+    ## capture the source file's metadata and use it to calculate the destination parameters
+    eval $(ffprobe -v quiet -show_format -of flat=s=_ -show_entries stream=height,width,nb_frames,nb_streams,duration,codec_name,bit_rate,channels,display_aspect_ratio,codec_type "$line");
+    height=${streams_stream_0_height}
+    aspect_ratio=${streams_stream_0_display_aspect_ratio}
+    video_bitrate=${format_bit_rate}
+    video_bitrate=$((video_bitrate / 1000))
+    max_video_bitrate=$((5 * 1024))
+    stereo_audio_bitrate=441
+    surround_audio_bitrate=640
+    min_height=1080
+    audio_channels=false
+    audio_stream_index=false
+    video_filters=()
+    input_maps=("-map 0:0")
+    audio_processing=("-c:a:0 aac")
+    metadata=("-metadata:s:a:0 title=Stereo" '-metadata:s:a:0 language=eng')
+    stream_count=${format_nb_streams}
+    upscale=false ##changed to true when going from 720p to 1080p
+
+    # Limit the bitrate to the max_bitrate
+    detected_video_bitrate=$video_bitrate
+    if [ "$video_bitrate" -gt "$max_video_bitrate" ]; then
+      video_bitrate=$max_video_bitrate
+    fi
+
+    # Make sure the height is 1080 when the original video is 16:9 or 4:3
+    if [[ "$min_height" -ne "$height" && ($aspect_ratio == "16:9" || $aspect_ratio == "4:3") ]]; then
+      video_filters+=("scale=-1:$min_height:flags=lanczos")
+
+      # if we're upscaling from 720p to 1080p, let's tweak audo and video bitrates
+      if [ "$height" -eq 720 ]; then
+        video_bitrate=$max_video_bitrate
+        upscale=true
+      fi
+    fi
+
+    ## loop through the streams and grab the audio channel
+    for stream in `seq 1 $((stream_count - 1))`;
+    do
+      codec_type_var="streams_stream_${stream}_codec_type"
+      codec_type=${!codec_type_var}
+
+      ## if this is the first audio channel, update the mapping and capture the number of channels
+      if [[ $codec_type == "audio" && $audio_stream_index == false ]]; then
+        audio_stream_index=$stream
+        audio_channel_var="streams_stream_${stream}_channels"
+        audio_channels=${!audio_channel_var}
+        audio_bitrate_var="streams_stream_${stream}_bit_rate"
+        audio_bitrate=${!audio_bitrate_var}
+        detected_audio_bitrate=$audio_bitrate
+
+        if [ $audio_bitrate == "N/A" ]; then
+          audio_bitrate=$surround_audio_bitrate
+        else
+          audio_bitrate=$((audio_bitrate / 1000))
+          detected_audio_bitrate="${audio_bitrate}k"
+        fi
+
+        input_maps+=("-map 0:${audio_stream_index}")
+      fi
+    done
+
+
+    ## if the audio bitrate is higher than the stereo bitrate, lower it
+    if [ "$audio_bitrate" -gt "$stereo_audio_bitrate" ]; then
+        audio_processing+=("-b:a:0 ${stereo_audio_bitrate}k")
+    ## if it isn't higher than the stereo bitrate, but this is a 720p to 1080p upscale, increase it
+    elif [ "$upscale" == true ]; then
+        audio_processing+=("-b:a:0 ${stereo_audio_bitrate}k")
+    ## otherwise, enforce the original bitrate
+    else
+        audio_processing+=("-b:a:0 ${audio_bitrate}k")
+    fi
+
+    ## if the audio track has more than two channels, create a stereo version and store this version as a secondary stream
+    if [ "$audio_channels" -gt 2 ]; then
+      ## add another map to the original audio
+      input_maps+=("-map 0:${audio_stream_index}")
+
+      ## make the primary audio stereo and encode the surround audio as ac3
+      audio_processing+=("-ac:a:0 2" '-c:a:1 ac3')
+
+      ## if the audio bitrate is higher than the surround bitrate, lower it
+      if [ "$audio_bitrate" -gt "$surround_audio_bitrate" ]; then
+          audio_processing+=("-b:a:1 ${surround_audio_bitrate}k")
+      ## if it isn't higher than the surround bitrate, but this is a 720p to 1080p upscale, increase it
+      elif [ "$upscale" == true ]; then
+          audio_processing+=("-b:a:1 ${surround_audio_bitrate}k")
+      ## otherwise, enforce the original bitrate
+      else
+          audio_processing+=("-b:a:1 ${audio_bitrate}k")
+      fi
+
+      ## set the metadata
+      metadata+=("-metadata:s:a:1 title=Surround" '-metadata:s:a:1 language=eng')
+    fi
+
+
+    ## convert command arrays into strings
+    input_maps=$( IFS=$' '; echo "${input_maps[*]}" )
+    audio_processing=$( IFS=$' '; echo "${audio_processing[*]}" )
+    metadata=$( IFS=$' '; echo "${metadata[*]}" )
+
+    if [ ${#video_filters[@]} -ne 0 ]; then
+      video_filters=$( IFS=$','; echo "${video_filters[*]}" )
+      video_filters="-vf $video_filters"
+    else
+      video_filters=""
+    fi
+
+    video_filters_debug="None"
+
+    if [ ! -z "$video_filters" ]; then
+      video_filters_debug=$video_filters
+    fi
+
+    #### DEBUG DETAILS ###
+    echo -e "\n#####"
+    echo "Audio channels: $audio_channels"
+    echo "Audio Bitrate: ${audio_bitrate}k (used in conversion calculations)"
+    echo "Detected Audio Bitrate: ${detected_audio_bitrate} (results from ffprobe)"
+    echo "Video Bitrate: ${video_bitrate}k (used in conversion calculations)"
+    echo "Detected Video Bitrate: ${detected_video_bitrate}k (results from ffprobe)"
+    echo "Video height: $height"
+    echo "Video aspect ratio: $aspect_ratio"
+    echo "Calculated filters: $video_filters_debug"
+    echo "Calculated input map: $input_maps"
+    echo "Calculated audio processing: $audio_processing"
+    echo "Calculated metadata: $metadata"
+    echo -e "#####\n"
+
+    ## transcode
+    ffmpeg-bar -i "$line" `## input the discovered source file` \
+               $input_maps `## handles input mapping  for multichannel audio` \
+               -c:v h264_videotoolbox `## use h264_videotoolbox as the video codec to leveral the GPU` \
+               -b:v "$video_bitrate"k `## use the calculated video bit rate based on the source` \
+               -pix_fmt yuv420p `## force the pixel format to yuv420p for quicktime compatibility` \
+               $video_filters `## plugs in built out filters` \
+               -sn `## strip subtitles in favor of external files` \
+               $audio_processing  `## handles audio mapping when source material is 5.1` \
+               $metadata  `## adds metadata` \
+               "$NEW_FILE" < /dev/null ## output to new file name
+    trash "$line"
+  fi
+done < "$FILELIST"
