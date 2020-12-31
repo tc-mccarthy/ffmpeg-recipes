@@ -16,7 +16,7 @@ If my source material is DTS audio, I map it twice. The primary mapping gets dow
 
 #### Helpful hints
 - The list building processes uses `find` and searches for a number of common video extensions. You can extend this by adding your own. 
-- `*.mp4` is excluded from the list of video files I search for because, in my application, that is the extension of the file I'm converting to. If I have an mp4 source file that needs to be standardized, I change the extension to `m4v` which preserves everything in the source file, including playback, but allows the transcode script to pick it up and work with it.
+- `*.mp4` is excluded from the list of video files I search for because, in my application, that is the extension of the file I'm converting to. This same logic provides the "lock" logic that keeps the same file from being processed twice after a start/stop of the script or the script being run on a shared directory by multiple hosts. **If I have an mp4 source file that needs to be standardized, I change the extension to `m4v` which preserves everything in the source file, including playback, but allows the transcode script to pick it up and work with it.**
 
 ## Zoom Up-convert
 
