@@ -51,16 +51,17 @@ do
     min_video_bitrate=$((5 * 1024))
     target_fps="2997/100"
     target_fps_num=$(echo "scale=2; ${target_fps}" | bc)
+    video_encode_codec="h264_videotoolbox" ## use h264_videotoolbox as the video codec to leverage the GPU. libx264 will use the CPU and will provide smaller files, but also longer encode times
+    video_filters=()
+
     stereo_audio_bitrate=441
     min_height=1080
     audio_channels=false
 
-    video_filters=()
     input_maps=()
     audio_processing=("-c:a:0 aac")
     metadata=("-metadata:s:a:0 title=Stereo")
     stream_count=${format_nb_streams}
-    upscale=false ##changed to true when going from 720p to 1080p
 
     ## loop through the streams and identify the audio and video channels and properties
     for stream in `seq 0 $((stream_count - 1))`;
@@ -176,7 +177,7 @@ do
     ## transcode
     ffmpeg-bar -i "$line" `## input the discovered source file` \
                $input_maps `## handles input mapping  for multichannel audio` \
-               -c:v h264_videotoolbox `## use h264_videotoolbox as the video codec to leveral the GPU` \
+               -c:v "$video_encode_codec"  \
                -b:v "$video_bitrate"k `## use the calculated video bit rate based on the source` \
                -pix_fmt yuv420p `## force the pixel format to yuv420p for quicktime compatibility` \
                $video_filters `## plugs in built out filters` \

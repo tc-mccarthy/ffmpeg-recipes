@@ -25,3 +25,7 @@ These scripts have some inherent logic for resumable processing and load balanci
 The scripts also look to see if the destination file exists as part of the file loop. If the destination file exists, the job is skipped. This allows you to have multiple machines processing the same shared directory concurrently, splitting the work up among each of them.
 
 This same logic + a SIGTERM trap allows you to cancel a running script midway through `(Ctrl + C)` and, the next time you start it up, it start with the first unprocessed file.
+
+### h264_videotoolbox
+
+The scripts use the h264_videotoolbox codec for transcodes by default as this leverages the Mac GPU (or Intel QuickSync) for improved encoding speeds. You will also see larger file sizes than when you use libx264 so it's up to you if you want to change this.

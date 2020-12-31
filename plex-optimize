@@ -44,6 +44,7 @@ do
 
     max_video_bitrate=$((5 * 1024))
     video_filters=()
+    video_encode_codec="h264_videotoolbox" ## use h264_videotoolbox as the video codec to leverage the GPU. libx264 will use the CPU and will provide smaller files, but also longer encode times
 
     stereo_audio_bitrate=441
     surround_audio_bitrate=640
@@ -191,7 +192,7 @@ do
     ## transcode
     ffmpeg-bar -i "$line" `## input the discovered source file` \
                $input_maps `## handles input mapping  for multichannel audio` \
-               -c:v h264_videotoolbox `## use h264_videotoolbox as the video codec to leveral the GPU` \
+               -c:v "$video_encode_codec"  \
                -b:v "$video_bitrate"k `## use the calculated video bit rate based on the source` \
                -pix_fmt yuv420p `## force the pixel format to yuv420p for quicktime compatibility` \
                $video_filters `## plugs in built out filters` \
