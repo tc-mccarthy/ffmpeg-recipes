@@ -191,7 +191,6 @@ do
     ## transcode
     ffmpeg-bar -i "$line" `## input the discovered source file` \
                $input_maps `## handles input mapping  for multichannel audio` \
-               -ss 00:00:00 -to 00:01:00 \
                -c:v h264_videotoolbox `## use h264_videotoolbox as the video codec to leveral the GPU` \
                -b:v "$video_bitrate"k `## use the calculated video bit rate based on the source` \
                -pix_fmt yuv420p `## force the pixel format to yuv420p for quicktime compatibility` \
