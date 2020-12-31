@@ -33,3 +33,7 @@ This same logic plus a SIGTERM trap allows you to cancel a running script midway
 ### h264_videotoolbox
 
 The scripts use the h264_videotoolbox codec for transcodes by default as this leverages the Mac GPU (or Intel QuickSync) for improved encoding speeds. You will also see larger file sizes than when you use libx264 so it's up to you if you want to change this.
+
+### Invitation to contribute
+
+I enjoy having my work reviewed and critiqued so my code, and skills, can improve. I wrote (and will continue to write) these scripts efforting to remove all assumptions from my code, but no one is perfect. Reporting issues (or, more helpfully, opening pull requests) will definitely help.
