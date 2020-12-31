@@ -1,6 +1,6 @@
 # ffmpeg-recipes
 
-Scripts for different video transcode scenarios
+Scripts for different video transcode scenarios. These scripts are written for ZSH on OSX but should work/can be adapted for any OS and shell.
 
 ## Getting started
 
