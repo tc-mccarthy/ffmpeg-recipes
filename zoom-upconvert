@@ -35,7 +35,7 @@ do
   extension="${filename##*.}"
   filename="${filename%.*}"
   NEW_FILE="${PROCESS_FILE_DIR}/${filename}.mp4"
-  trap "rm \"${PROCESS_FILE_DIR}\"; exit" SIGINT
+  trap "rm \"${NEW_FILE}\"; exit" SIGINT
 
   ## TRANSCODE IF FILE DOESN'T ALREADY EXIST
   if [ ! -f "$NEW_FILE" ]; then
