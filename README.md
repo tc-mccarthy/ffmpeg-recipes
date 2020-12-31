@@ -24,7 +24,7 @@ In these times of COVID-19, a lot of things are happening via ZOOM, including vi
 
 ### Extras for more fun
 
-These scripts have some inherent logic for resumable processing and load balancing jobs. Each script generates the list of files to be processed and stores them in a `txt` file that with a naming convention that includes the host's `hostsname` so that each system will have its own list, even if the work directory is on a NAS or other shared directory.
+These scripts have some inherent logic for resumable processing and load balancing jobs. Each script generates the list of files to be processed and stores them in a `txt` file that with a naming convention that includes the host's `hostname` so that each system will have its own list, even if the work directory is on a NAS or other shared directory.
 
 The scripts also look to see if the destination file exists as part of the file loop. If the destination file exists, the job is skipped. This allows you to have multiple machines processing the same shared directory concurrently, splitting the work up among each of them.
 
