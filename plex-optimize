@@ -1,26 +1,55 @@
 #!/bin/bash
 
-HOSTNAME=$(hostname)
-WORK_DIR="./convert_work"
-FILELIST="${WORK_DIR}/list_${HOSTNAME}.txt"
-CURRENT_CONVERSION="${WORK_DIR}/current_conversion_${HOSTNAME}.txt"
-PATHS=() #BASH ARRAY OF PATHS TO RECURSIVELY CHECK FOR VIDEO FILES
+######### CONFIGURATION #########
+HOSTNAME=$(hostname) ## THE HOSTNAME OF THIS COMPUTER. USED IN FILE LIST FILENAME
+WORK_DIR="./convert_work" ## PATH TO DIRECTORY IN WHICH THE FILE LISTS ARE STORED
+FILELIST="${WORK_DIR}/list_${HOSTNAME}.txt"  ## FULL PATH TO THE FILELIST FILE
+CURRENT_CONVERSION="${WORK_DIR}/current_conversion_${HOSTNAME}.txt" ## FULL PATH TO THE FILE THAT STORES THE CURRENT CONVERSION JOB TITLE
+PATHS=() # BASH ARRAY OF PATHS TO RECURSIVELY CHECK FOR VIDEO FILES
+FILE_EXT=("avi" "mkv" "m4v" "flv" "mov" "wmv" "webm" "gif") # FILE EXTENSIONS TO SEARCH FOR
+######### END CONFIGURATION #########
 
+######### GENERATE THE FILE LIST #########
+FIND_FILE_EXT=() # FILE EXTENSIONS WILL BE UPATED WITH FIND SYNTAX AND STORED IN A SEPARATE ARRAY
+
+# LOOP THROUGH THE FILE EXTENSIONS AND UPDATE THEM TO BE IN FIND SYNTAX
+for EXT in ${FILE_EXT[@]}
+do
+  FIND_FILE_EXT+=("-iname *.${EXT}")
+done
+
+#### JOIN ALL OF THE FIND FILE EXT ELEMENTS TOGETHER IN FIND SYNTAX ####
+delim=$' -o ' # DELIMITER IS THE OR OPERATOR
+
+# MERGE ALL OF THE EXTENSIONS USING THE -O OPERATOR AND REPLACE FIND_FILE_EXT WITH THE NEW STRING
+printf -v FIND_FILE_EXT "%s$delim" "${FIND_FILE_EXT[@]}"
+
+# REMOVE THE TRAILING -O
+FIND_FILE_EXT="${FIND_FILE_EXT%$delim}"
+
+# CREATE THE WORK DIRECTORY
 echo "Creating work directory..."
-mkdir -p $WORK_DIR
+mkdir -p "$WORK_DIR"
 
+# CREATE/TRUNCATE THE FILE LIST
 echo "Creating and clearing file list..."
-touch $FILELIST
-truncate -s 0 $FILELIST
+touch "$FILELIST"
+truncate -s 0 "$FILELIST"
 
+# POPULATE THE FILE LIST
 echo "Building file list..."
 for i in "${PATHS[@]}"
 do
-  find "$i" \( -iname "*.avi" -o -iname "*.mkv" -o -iname "*.m4v" -o -iname "*.flv" -o -iname "*.mov" -o -iname "*.wmv" -o -iname "*.webm" -o -iname "*.gif" \) -exec greadlink -f {} >> $FILELIST \;
+  ## SEARCHES ALL PATHS FOR EACH OF THE EXTENSIONS AND
+  ## STORES THE FULL PATH FOR EACH ONE FOUND, ONE PER LINE
+  find "$i" \( $FIND_FILE_EXT \) -exec greadlink -f {} >> "$FILELIST" \;
 done
 
+####### END FILE LIST BUILD #######
+
+####### BEGIN TRANSCODE #######
 echo "Transcoding..."
-while IFS= read -r line
+while IFS= read -r line ## ITERATE THROUGH THE FILE LIST, LINE BY LINE
 do
   ## GET THE ORIGINAL DIRECTORY PATH
   FILE_DIR=$(dirname "${line}")
