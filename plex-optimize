@@ -33,8 +33,8 @@ mkdir -p $WORK_DIR
 
 # CREATE/TRUNCATE THE FILE LIST
 echo "Creating and clearing file list..."
-touch $FILELIST
-truncate -s 0 $FILELIST
+touch "$FILELIST"
+truncate -s 0 "$FILELIST"
 
 # POPULATE THE FILE LIST
 echo "Building file list..."
@@ -42,7 +42,7 @@ for i in "${PATHS[@]}"
 do
   ## SEARCHES ALL PATHS FOR EACH OF THE EXTENSIONS AND
   ## STORES THE FULL PATH FOR EACH ONE FOUND, ONE PER LINE
-  find "$i" \( $FIND_FILE_EXT \) -exec greadlink -f {} >> $FILELIST \;
+  find "$i" \( $FIND_FILE_EXT \) -exec greadlink -f {} >> "$FILELIST" \;
 done
 
 ####### END FILE LIST BUILD #######
