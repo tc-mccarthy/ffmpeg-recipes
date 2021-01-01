@@ -30,7 +30,7 @@ FIND_FILE_EXT="${FIND_FILE_EXT%$delim}"
 
 # CREATE THE WORK DIRECTORY
 echo "Creating work directory..."
-mkdir -p $WORK_DIR
+mkdir -p "$WORK_DIR"
 
 # CREATE/TRUNCATE THE FILE LIST
 echo "Creating and clearing file list..."
