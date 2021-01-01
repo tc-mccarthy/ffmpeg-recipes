@@ -12,11 +12,12 @@ I have used Plex for a long time and spent a lot of time tweaking my various vid
 
 My `plex-optimize` script is tuned for my setup, but it should be easy to adapt it for other purposes. Simply update the PATHS variable (it expects a BASH array) with all of the different directories that contain your movie files. It generates a list of files to be converted and then loops through. It runs ffprobe on each so that I can see if any bitrate adjustments need to be made. I also have logic for upscaling to 1080p for 16:9 and 4:3 aspect ratios.
 
-If my source material is DTS audio, I map it twice. The primary mapping gets downmixed to stereo and the secondary is the original audio line but at a max bitrate. This is because I find that when Plex serves DTS to my TV with onboard stereo speakers, I am constantly increasing the volume to hear speech and then pulling it down when there's music. I preserve the DTS though because I use that audio line when I'm watching a movie with my surround sound on.
+If my source material has more than two channels of audio, I map it twice. The primary mapping gets downmixed to stereo (2 channels) and the original audio line is limited to a maximum bitrate but otherwise preserved as a secondary audio stream. This is because I find that when Plex serves surround sound to my TV with onboard stereo speakers, I am constantly increasing the volume to hear speech and then pulling it down when there's music. I preserve the surround sound in a second stream though because then it's available to me when I'm watching a movie with my surround sound on.
 
 #### Helpful hints
-- The list building processes uses `find` and searches for a number of common video extensions. You can extend this by adding your own. 
-- `*.mp4` is excluded from the list of video files I search for because, in my application, that is the extension of the file I'm converting to. This same logic provides the "lock" logic that keeps the same file from being processed twice after a start/stop of the script or the script being run on a shared directory by multiple hosts. **If I have an mp4 source file that needs to be standardized, I change the extension to `m4v` which preserves everything in the source file, including playback, but allows the transcode script to pick it up and work with it.**
+
+-   The list building processes uses `find` and searches for a number of common video extensions. You can extend this by adding your own.
+-   `*.mp4` is excluded from the list of video files I search for because, in my application, that is the extension of the file I'm converting to. This same logic provides the "lock" logic that keeps the same file from being processed twice after a start/stop of the script or the script being run on a shared directory by multiple hosts. **If I have an mp4 source file that needs to be standardized, I change the extension to `m4v` which preserves everything in the source file, including playback, but allows the transcode script to pick it up and work with it.**
 
 ## Zoom Up-convert
 
