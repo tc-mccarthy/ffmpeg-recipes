@@ -47,12 +47,18 @@ do
   find "$i" -type d -name "processed" -prune -o \( $FIND_FILE_EXT \) -exec greadlink -f {} >> "$FILELIST" \;
 done
 
+FILE_COUNT=$(wc -l "$FILELIST" | awk '{print $1}')
+CURRENT_INDEX=0
 ####### END FILE LIST BUILD #######
 
 ####### BEGIN TRANSCODE #######
 echo "Transcoding..."
 while IFS= read -r line ## ITERATE THROUGH THE FILE LIST, LINE BY LINE
 do
+  ## INCREMENT THE INDEX COUNT
+  CURRENT_INDEX=$((CURRENT_INDEX+1))
+  CURRENT_INDEX_PCT=$(echo "scale=2; ${CURRENT_INDEX}/${FILE_COUNT}*100" | bc)
+
   ## GET THE ORIGINAL DIRECTORY PATH
   FILE_DIR=$(dirname "${line}")
   PROCESS_FILE_DIR="${FILE_DIR}/processed"
@@ -193,6 +199,7 @@ do
 
     #### DEBUG DETAILS ###
     echo -e "\n#####"
+    echo "Count: ${CURRENT_INDEX} of ${FILE_COUNT} (${CURRENT_INDEX_PCT}%)"
     echo "Audio channels: $audio_channels"
     echo "Audio Bitrate: ${audio_bitrate}k (used in conversion calculations)"
     echo "Detected Audio Bitrate: ${detected_audio_bitrate} (results from ffprobe)"
