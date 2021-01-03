@@ -69,7 +69,7 @@ do
     echo "${line} -> ${NEW_FILE}" > $CURRENT_CONVERSION
 
     ## capture the source file's metadata and use it to calculate the destination parameters
-    eval $(ffprobe -v quiet -show_format -of flat=s=_ -show_entries stream=height,width,nb_frames,nb_streams,duration,codec_name,bit_rate,channels,display_aspect_ratio,codec_type "$line");
+    eval $(ffprobe -v quiet -show_format -of flat=s=_ -show_entries stream=height,width,nb_frames,nb_streams,duration,codec_name,bit_rate,channels,display_aspect_ratio,codec_type,size "$line");
     audio_stream_index=false
     video_stream_index=false
 
@@ -127,6 +127,8 @@ do
 
         video_bitrate=${format_bit_rate}
         video_bitrate=$((video_bitrate / 1000))
+
+        original_file_size=${format_size}
 
         framerate_var="streams_stream_${video_stream_index}_r_frame_rate"
         framerate=${!framerate_var}
@@ -232,5 +234,19 @@ do
                $metadata  `## adds metadata` \
                "$NEW_FILE" < /dev/null ## output to new file name
     trash "$line"
+
+    eval $(ffprobe -v quiet -show_format -of flat=s=_ -show_entries stream=height,width,nb_frames,nb_streams,duration,codec_name,bit_rate,channels,display_aspect_ratio,codec_type,size "$NEW_FILE");
+    new_file_size=${format_size}
+    file_size_change=$(echo "scale=2; ${new_file_size}-${original_file_size}" | bc)
+    file_size_pct_change=$(echo "scale=2; ${file_size_change}/${original_file_size}*100" | bc)
+    file_size_change=$(echo "scale=2; ${file_size_change}/1000/1000" | bc)
+
+    #### DEBUG DETAILS ###
+    echo -e "\n#####"
+    echo "Complete"
+    echo "File size change: ${file_size_change}MB"
+    echo "File size pct change: ${file_size_pct_change}%"
+    echo -e "#####\n"
+    ### END DEBUG ###
   fi
 done < "$FILELIST"
