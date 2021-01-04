@@ -87,8 +87,6 @@ do
 
 
     min_video_bitrate=$((5 * 1024))
-    target_fps="2997/100" ## Shooting for NTSC drop frame, which ffprobe displays this way
-    target_fps_num=$(echo "scale=2; ${target_fps}" | bc) ## compute the string representation of the target_fps into a FLOAT for use in transcode
     video_encode_codec="h264_videotoolbox" ## use h264_videotoolbox as the video codec to leverage the GPU. libx264 will use the CPU and will provide smaller files, but also longer encode times
     video_filters=() ## starts out as an empty array and may never be populated if the source material doesn't require it
 
@@ -166,12 +164,6 @@ do
       video_filters+=("scale=-1:$min_height:flags=lanczos")
     fi
 
-    # Adjust the framerate if necessary
-    if [[ "$framerate" != "$target_fps" ]]; then
-      video_filters+=("fps=fps=${target_fps_num}")
-    fi
-
-
     ## if the audio bitrate is lower than the stereo bitrate, increase it
     if [ "$audio_bitrate" -lt "$stereo_audio_bitrate" ]; then
         audio_bitrate=$stereo_audio_bitrate
@@ -205,8 +197,6 @@ do
     echo "Detected Audio Bitrate: ${detected_audio_bitrate} (results from ffprobe)"
     echo "Video Bitrate: ${video_bitrate}k (used in conversion calculations)"
     echo "Detected Video Bitrate: ${detected_video_bitrate}k (results from ffprobe)"
-    echo "Video Framerate: ${target_fps_num} (used in conversion calculations)"
-    echo "Detected Video Framerate: ${framerate} (results from ffprobe)"
     echo "Video height: $height"
     echo "Video aspect ratio: $aspect_ratio"
     echo "Calculated filters: $video_filters_debug"
