@@ -154,8 +154,8 @@ do
     if [[ "$min_height" -ne "$height" && ($aspect_ratio == "16:9" || $aspect_ratio == "4:3") ]]; then
       video_filters+=("scale=-1:$min_height:flags=lanczos")
 
-      # if we're upscaling from 720p to 1080p, let's tweak audo and video bitrates
-      if [ "$height" -eq 720 ]; then
+      # if we're upscaling to 1080p, let's tweak audo and video bitrates
+      if [ "$height" -lt "$min_height" ]; then
         video_bitrate=$max_video_bitrate
         upscale=true
       fi
@@ -170,6 +170,12 @@ do
     ## otherwise, enforce the original bitrate
     else
         audio_processing+=("-b:a:0 ${audio_bitrate}k")
+    fi
+    
+    ## if the audio track has fewer than two channels, make it stereo
+    if [ "$audio_channels" -lt 2 ]; then
+      ## make the primary audio stereo
+      audio_processing+=("-ac:a:0 2")
     fi
 
     ## if the audio track has more than two channels, create a stereo version and store this version as a secondary stream
