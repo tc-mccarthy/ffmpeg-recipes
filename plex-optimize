@@ -71,6 +71,11 @@ do
 
   ## TRANSCODE IF FILE DOESN'T ALREADY EXIST
   if [ ! -f "$NEW_FILE" ]; then
+    ## SET THE WINDOW TITLE ON OH-MY-ZSH
+    DISABLE_AUTO_TITLE="true"
+    echo -e "\033];Transcoding ${line}\007"
+
+    ## tell me what we're transcoding
     echo "transcoding ${line}"
     echo "${line} -> ${NEW_FILE}" > $CURRENT_CONVERSION
 
@@ -222,13 +227,16 @@ do
     #### DEBUG DETAILS ###
     echo -e "\n#####"
     echo "Count: ${CURRENT_INDEX} of ${FILE_COUNT} (${CURRENT_INDEX_PCT}%)"
+    echo "File: ${line}"
     echo "Audio channels: $audio_channels"
     echo "Audio Bitrate: ${audio_bitrate}k (used in conversion calculations)"
+    echo "Audio Stream Index: ${audio_stream_index}"
     echo "Detected Audio Bitrate: ${detected_audio_bitrate} (results from ffprobe)"
     echo "Video Bitrate: ${video_bitrate}k (used in conversion calculations)"
     echo "Detected Video Bitrate: ${detected_video_bitrate}k (results from ffprobe)"
     echo "Video height: $height"
     echo "Video aspect ratio: $aspect_ratio"
+    echo "Video stream index: ${video_stream_index}"
     echo "Calculated filters: $video_filters_debug"
     echo "Calculated input map: $input_maps"
     echo "Calculated audio processing: $audio_processing"
