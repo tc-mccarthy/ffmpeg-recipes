@@ -203,6 +203,9 @@ do
     echo "Calculated input map: $input_maps"
     echo "Calculated audio processing: $audio_processing"
     echo "Calculated metadata: $metadata"
+    echo -e "\n"
+    echo "### Command ###"
+    echo -e "ffmpeg-bar -i \"${line}\" \ \n ${input_maps} \ \n -c:v ${video_encode_codec} \ \n -b:v ${video_bitrate}k \ \n -pix_fmt yuv420p \ \n ${video_filters} \ \n -sn \ \n ${audio_processing} \ \n ${metadata} \ \n \"${NEW_FILE}\""
     echo -e "#####\n"
 
     ## transcode
